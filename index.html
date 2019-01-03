@@ -1,17 +1,12 @@
 <html><head>
-<script>
-  (function() {
-    var id = 'e7ea630a-0f2f-11e9-a97a-0242ac130002';
-    var ci_search = document.createElement('script');
-    ci_search.type = 'text/javascript';
-    ci_search.async = true;
-    ci_search.src = 'https://cse.expertrec.com/api/js/ci_common.js?id=' + id;
-    var s = document.getElementsByTagName('script')[0];
-    s.parentNode.insertBefore(ci_search, s);
-  })();
-</script>
-	<ci-search></ci-search>
-	
+<form action="//www.findberry.com/search/" method="get" id="sr_newpage">
+  <input type="hidden" name="wid" value="11480" />
+  <input id="sr_searchbox" type="text" name="query" value="" size="35" />
+  <input id="sr_searchbutton" type="submit" value="Search" /><br />
+  <a href="http://www.findberry.com" target="_blank" style="line-height: 1.7">
+  Site search by Findberry</a>
+</form>
+
 
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 		<meta charset="utf-8">
@@ -3219,7 +3214,17 @@
 			    return string
 			}
 		</script>
-	
+	</head>
+	<body>
+		<div class="container">
+			<div id="search">
+				<input id="page-go" style="width: 350px;" placeholder="Open page..." type="text">
+				<button id="go">Go!</button>
+				<button id="feellucky">check your luck </button>
+			</div>
+			<div id="pagination">Page <b>22461837232232183631047113912814945264681</b> from <b>1157920892373161954235709850086879078528375642790749043826051631415181614944</b></div>
+			<div id="content" class="overflow mb-15">
+				<table style="text-align: left;" id="keys">
 					<tbody><tr>
 						<th scope="col">Address</th>
 						<th scope="col" style="display:none">Type</th>
@@ -4533,7 +4538,30 @@
 		</div>
 	
 		<script>
+			perpage = "100" // Addresses per page
+			total = "115792089237316195423570985008687907852837564279074904382605163141518161494337" // 1.158 * 10^77 (Bitcoin addresses space)
+			max = StringMath.add(StringMath.divide(total, perpage).substring(0, StringMath.divide(total, perpage).indexOf('.')), "1") // Max pages
 			
+			// Get private key numbers based on page
+			function getNumbers(page) {
+				result = []
+				page = StringMath.subtract(page, "1")
+				page = StringMath.multiply(page, perpage)
+				page = StringMath.add(page, "1")
+				number = page
+
+				while (result.length < perpage) {
+					if (StringMath.compare(number, total) > -1) {
+						break
+					} else {
+						result.push(number)
+						number = StringMath.add(number, "1")
+					}
+				}
+
+				return result
+			}
+
 			// Encode int to hex and get compressed/uncompresses WIF keys
 			function getData(number) {
 				key = decToHex(number).padStart(64, '0')
@@ -4622,7 +4650,32 @@
 				return `<a target="_blank" href="https://www.blockchain.com/btc/address/${address}">${address}</a>`
 			}
 
-			
+			// My little piece of ?( ? ??)
+			function feellucky() {
+				page = ""
+				data = Math.floor(Math.random() * (92913921392193 - 1)) + 1 + "God love Bitcoins" + Date.now()
+				var result = "";
+				for (i=0; i<data.length; i++) {
+					hex = data.charCodeAt(i).toString(16)
+					result += ("000"+hex).slice(-4);
+				}
+
+				hexData = Crypto.SHA256(hexToBytes(result))
+				for (var i = 0; i < 64; i += 2) { page += parseInt(hexData.slice(i, i + 2), 16).toString() }
+				
+				lengthCheck = StringMath.compare(page, max) == 1
+
+				while (lengthCheck) {
+					page = (Math.floor(page.length % 2) == 1) ? page.substring(0, Math.floor(page.length / 2)) : page.substring(Math.floor(page.length / 2), page.length - 1)
+					if ((parseInt(page[0]) % 2) == 1) { page = page.split("").reverse().join("") }
+					if ((parseInt(page.substring(0,2) > parseInt(max.substring(0,2)) && page.length >= max.length))) { page = page.substring(2) }
+					lengthCheck = StringMath.compare(page, max) == 1
+				}
+
+				if (page[0] == "0") { page = page.substring(1) }
+
+				return page
+			}
 
 			// AJAX request
 			function get(url) {
@@ -4640,7 +4693,14 @@
 				return (amount / Math.pow(10, 8)).toFixed(8);
 			}
 
-			
+			// Display this nice list of addresses
+			function display(page = "1") {
+				displayUncompressed = false
+				numbers = getNumbers(page)
+				addresses = []
+
+				document.getElementById("keys").innerHTML = ""
+				document.getElementById("pagination").innerHTML = `Page <b>${page}</b> from <b>${max}</b>`
 
 				document.getElementById("keys").insertAdjacentHTML('beforeend', `
 					<tr>
@@ -4680,7 +4740,33 @@
 				}
 			}
 
-		
+			// Go to page
+			document.getElementById("go").onclick = function() {
+				page = document.getElementById("page-go").value
+				if(!isNaN(page)) {
+					display(page)
+				}
+			}
+
+			// Do you feel lucky today?
+			document.getElementById("feellucky").onclick = function() {
+				page = feellucky()
+				if(!isNaN(page)) {
+					display(page)
+				}
+			}
+
+			// Go to page by pressing enter key
+			document.getElementById("page-go").addEventListener("keyup", function(event) {
+				event.preventDefault();
+				if (event.keyCode === 13) {
+					page = document.getElementById("page-go").value
+					if(!isNaN(page)) {
+						display(page)
+					}
+				}
+			});
+
 			// Lets launch this maching :D
 			(function() {
 				display()
